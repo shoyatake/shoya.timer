@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タイマー</title>
+</head>
+<body>
+  <div class="timer-container" data-timer-id="1" style="display: flex; flex-direction: column; align-items: center;">
+    <p id="timer-1" style="font-size: 5em; color: #4b0082;">05:00</p>
+    <button id="start-stop-1" style="font-size: 1.5em; padding: 10px; border: none; border-radius: 5px; color: white; background-color: #4b0082; cursor: pointer;">スタート/ストップ</button>
+  </div>
+  <script>
+    function createTimer(timerId) {
+      const timerElem = document.getElementById(`timer-${timerId}`);
+      const startStopBtn = document.getElementById(`start-stop-${timerId}`);
+      let timeLeft = 300;
+      let timerInstance = null;
+      let timerRunning = false;
+
+      function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const seconds = (timeLeft % 60).toString().padStart(2, '0');
+        timerElem.textContent = `${minutes}:${seconds}`;
+      }
+
+      function countdown() {
+        timeLeft--;
+        updateTimer();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInstance);
+          timerRunning = false;
+          alert('タイマーが終了しました！');
+        }
+      }
+
+      startStopBtn.addEventListener('click', () => {
+        if (timerRunning) {
+          clearInterval(timerInstance);
+          timerRunning = false;
+        } else {
+          timerRunning = true;
+          timerInstance = setInterval(countdown, 1000);
+        }
+      });
+    }
+
+    const timerContainers = document.querySelectorAll('.timer-container');
+    timerContainers.forEach((container) => {
+      const timerId = container.getAttribute('data-timer-id');
+      createTimer(timerId);
+    });
+  </script>
+</body>
+</html>
+
