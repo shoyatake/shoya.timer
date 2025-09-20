@@ -1,58 +1,345 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>タイマー</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eiken 3 / 中学生向けオンライン英語レッスン – Unit 1: A Day at the Park</title>
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#475569;
+      --accent:#2563eb;
+      --accent-2:#10b981;
+      --danger:#ef4444;
+      --shadow:0 10px 25px rgba(2,12,27,.08);
+      --radius:18px;
+    }
+    html,body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,'Hiragino Kaku Gothic ProN','Noto Sans JP',Meiryo,sans-serif;line-height:1.6;margin:0}
+    .wrap{max-width:980px;margin:auto;padding:28px 18px 64px}
+    h1{font-size:clamp(1.4rem,2.3vw+1rem,2.2rem);margin:0 0 6px}
+    h2{font-size:clamp(1.1rem,1.4vw+1rem,1.4rem);margin:22px 0 10px}
+    p.lead{color:var(--muted);margin-top:0}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px;margin:16px 0}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:880px){ .row{grid-template-columns:1fr 1fr} }
+    .chip{display:inline-block;background:#e2e8f0;border-radius:999px;padding:2px 10px;margin:2px 4px;font-size:.9rem}
+    .btn{appearance:none;border:none;background:var(--accent);color:#fff;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600}
+    .btn.alt{background:var(--accent-2)}
+    .btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .q{margin:10px 0;padding:12px;border-radius:12px;border:1px solid #e5e7eb}
+    .q.correct{border-color:#22c55e;background:rgba(16,185,129,.06)}
+    .q.wrong{border-color:#ef4444;background:rgba(239,68,68,.06)}
+    .small{font-size:.92rem;color:var(--muted)}
+    .score{font-weight:700}
+    input[type="text"]{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-size:1rem}
+    .grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .pill{background:#eef2ff; border-radius:14px; padding:8px 10px}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#111827;color:#e5e7eb;border-radius:6px;padding:0 6px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .box{border:1px dashed #cbd5e1;border-radius:12px;padding:12px}
+    .right{text-align:right}
+    .progress{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+    .progress > div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#22c55e);transition:width .5s}
+    .hint{background:#fef9c3;border:1px solid #fde047;padding:10px;border-radius:10px}
+  </style>
 </head>
 <body>
-  <div class="timer-container" data-timer-id="1" style="display: flex; flex-direction: column; align-items: center;">
-    <p id="timer-1" style="font-size: 5em; color: #4b0082;">05:00</p>
-    <button id="start-stop-1" style="font-size: 1.5em; padding: 10px; border: none; border-radius: 5px; color: white; background-color: #4b0082; cursor: pointer;">スタート/ストップ</button>
+<div class="wrap">
+  <h1>Unit 1: A Day at the Park（公園での一日）</h1>
+  <p class="lead">対象：中学生／英検3級レベル。スマホ対応・スコア保存付き。<span class="small">（内容は <span class="mono">localStorage</span> に保存）</span></p>
+
+  <div class="card">
+    <div class="flex">
+      <div class="chip">Vocabulary</div>
+      <div class="chip">Reading</div>
+      <div class="chip">Listening (TTS)</div>
+      <div class="chip">Grammar</div>
+      <div class="chip">Writing</div>
+      <div class="chip">Quiz</div>
+    </div>
+    <div class="progress" aria-label="progress"><div id="bar"></div></div>
+    <p class="small right">Score: <span class="score" id="score">0</span> / <span id="total">0</span></p>
   </div>
-  <script>
-    function createTimer(timerId) {
-      const timerElem = document.getElementById(`timer-${timerId}`);
-      const startStopBtn = document.getElementById(`start-stop-${timerId}`);
-      let timeLeft = 300;
-      let timerInstance = null;
-      let timerRunning = false;
 
-      function updateTimer() {
-        const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-        const seconds = (timeLeft % 60).toString().padStart(2, '0');
-        timerElem.textContent = `${minutes}:${seconds}`;
-      }
+  <!-- 1) Vocabulary in Context -->
+  <div class="card" id="vocab">
+    <h2>1) Vocabulary in Context（文脈で単語を覚える）</h2>
+    <p>次の単語を見てから、短い文を音読しましょう。分からない単語は日本語ヒントを開いてOK。</p>
+    <div class="grid-3" id="words"></div>
+    <div class="box">
+      <p><strong>Mini Story:</strong> <span id="miniStory" class="mono"></span></p>
+      <div class="flex">
+        <button class="btn" id="speakStory">読み上げる（TTS）</button>
+        <button class="btn ghost" id="toggleHints">日本語ヒントを表示/非表示</button>
+      </div>
+      <div id="jpHints" class="hint" style="display:none;margin-top:10px"></div>
+    </div>
+  </div>
 
-      function countdown() {
-        timeLeft--;
-        updateTimer();
+  <!-- 2) Reading & Comprehension -->
+  <div class="card" id="reading">
+    <h2>2) Reading & Comprehension（読解）</h2>
+    <p class="small">本文を読んで、設問に答えましょう。選択後すぐ判定されます。</p>
+    <div class="box" id="passageBox">
+      <p id="passage" style="margin:0"></p>
+    </div>
+    <div id="mcArea"></div>
+  </div>
 
-        if (timeLeft <= 0) {
-          clearInterval(timerInstance);
-          timerRunning = false;
-          alert('タイマーが終了しました！');
-        }
-      }
+  <!-- 3) Grammar Focus -->
+  <div class="card" id="grammar">
+    <h2>3) Grammar Focus（文法） – <span class="kbd">現在形／頻度副詞</span></h2>
+    <p>英語の現在形は「習慣・事実」を表します。頻度副詞（<em>always / usually / often / sometimes / rarely / never</em>）とセットで覚えると◎。</p>
+    <div class="q">
+      <p class="small">空所に最も自然な語を入れてね。</p>
+      <div class="flex">
+        <span class="mono">I <input data-answer="usually" placeholder="語を入れる" style="width:140px" /> go to the park on Sundays.</span>
+        <button class="btn alt check">Check</button>
+      </div>
+      <div class="small"></div>
+    </div>
+    <div class="q">
+      <p class="small">動詞の三単現の <span class="mono">-s</span> に注意！</p>
+      <div class="flex">
+        <span class="mono">She <input data-answer="plays" placeholder="動詞" style="width:120px" /> tennis near the river.</span>
+        <button class="btn alt check">Check</button>
+      </div>
+      <div class="small"></div>
+    </div>
+  </div>
 
-      startStopBtn.addEventListener('click', () => {
-        if (timerRunning) {
-          clearInterval(timerInstance);
-          timerRunning = false;
-        } else {
-          timerRunning = true;
-          timerInstance = setInterval(countdown, 1000);
-        }
-      });
-    }
+  <!-- 4) Listening (Web Speech API TTS) -->
+  <div class="card" id="listening">
+    <h2>4) Listening（TTSで耳慣らし）</h2>
+    <p>文章を選んで「読み上げる」を押すとブラウザが音声合成します。（iOS Safari / Chrome など対応）</p>
+    <select id="ttsSelect" style="width:100%;padding:10px;border-radius:10px;border:1px solid #e5e7eb"></select>
+    <div class="flex" style="margin-top:10px">
+      <button class="btn" id="speakSelected">読み上げる</button>
+      <button class="btn ghost" id="stopTTS">停止</button>
+    </div>
+  </div>
 
-    const timerContainers = document.querySelectorAll('.timer-container');
-    timerContainers.forEach((container) => {
-      const timerId = container.getAttribute('data-timer-id');
-      createTimer(timerId);
+  <!-- 5) Writing with word counter -->
+  <div class="card" id="writing">
+    <h2>5) Writing（英作文 25–35語）</h2>
+    <p>お題：<strong>Do you think visiting a park is a good weekend activity?</strong>（公園に行くのは良い週末の過ごし方だと思いますか？）<br />
+    2つの理由を書き、<strong>25–35語</strong>でまとめましょう。</p>
+    <textarea id="essay" rows="6" placeholder="英作文をここに入力" style="width:100%;padding:12px;border-radius:12px;border:1px solid #e5e7eb"></textarea>
+    <div class="flex">
+      <span class="small">Word Count: <strong id="wc">0</strong></span>
+      <button class="btn alt" id="saveEssay">保存</button>
+      <button class="btn ghost" id="loadEssay">前回の続き</button>
+    </div>
+    <p class="small">ヒント：<em>I think … because … / First, … Second, … / In my opinion, …</em></p>
+  </div>
+
+  <!-- 6) Summary & Export -->
+  <div class="card" id="summary">
+    <h2>6) 今日のまとめ</h2>
+    <ul>
+      <li>単語を文脈で覚える → 読解で確認 → 文法で定着 → TTSで耳慣らし → 作文でアウトプット。</li>
+      <li>スコアと作文は、次回アクセス時に自動で引き継がれます。</li>
+    </ul>
+    <div class="flex">
+      <button class="btn" id="resetAll">スコアをリセット</button>
+      <button class="btn ghost" id="exportJSON">学習記録（JSON）をダウンロード</button>
+    </div>
+    <a id="dl" download="unit1_learning_record.json" style="display:none">download</a>
+  </div>
+
+  <div class="small" style="margin-top:20px">
+    <p><strong>Thinkific/WordPressへの埋め込み方法</strong></p>
+    <ol>
+      <li>Thinkific：レッスン作成 → 「マルチメディア」または「テキスト」→ 「HTML」ブロックにこのHTML全体を貼り付け。</li>
+      <li>WordPress：ブロックエディタで「カスタムHTML」ブロックを追加して、このHTML全体を貼り付け。</li>
+    </ol>
+    <p>※TTSは端末の音声エンジンに依存します。</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== DATA =====
+  const data = {
+    words: [
+      {en:'bench', jp:'ベンチ'},
+      {en:'fountain', jp:'噴水'},
+      {en:'path', jp:'小道'},
+      {en:'picnic', jp:'ピクニック'},
+      {en:'squirrel', jp:'リス'},
+      {en:'peaceful', jp:'穏やかな'},
+      {en:'nearby', jp:'近くの'},
+      {en:'exercise', jp:'運動する'},
+      {en:'tired', jp:'疲れた'},
+    ],
+    miniStory: "On Sunday, I meet my friend at a nearby park. We sit on a bench and watch a squirrel near the fountain. Then we walk along the path and have a small picnic. It is peaceful.",
+    miniStoryJP: "日曜日、私は近くの公園で友だちに会います。私たちはベンチに座り、噴水のそばのリスを見ます。その後、小道を歩いて、簡単なピクニックをします。穏やかな時間です。",
+    passage: `Many students visit the park on weekends. Some people go there to exercise, and others go to relax. In the morning, the park is quiet. A few families enjoy breakfast on the grass. 
+Near the fountain, children play, and their parents talk on a bench. In the afternoon, more visitors arrive. They walk along the path, take photos, and sometimes pick up trash to keep the park clean. 
+The park is popular because it is free, nearby, and peaceful.`,
+    mc: [
+      {q:"Why do many people visit the park?", choices:["Because it is expensive.","Because it is free and peaceful.","Because it is noisy."], a:1},
+      {q:"Where do some parents talk?", choices:["On a bench.","At home.","In a shop."], a:0},
+      {q:"What do some visitors do to help the park?", choices:["Pick up trash.","Feed wild animals.","Paint the fountain."], a:0},
+    ],
+    ttsSentences: [
+      "The park is quiet in the morning.",
+      "We sit on a bench and watch the fountain.",
+      "I usually go to the park on Sundays.",
+      "Children play near the fountain while parents talk."
+    ]
+  };
+
+  // ===== UTIL =====
+  const $ = (sel, parent=document) => parent.querySelector(sel);
+  const $$ = (sel, parent=document) => Array.from(parent.querySelectorAll(sel));
+  const storageKey = "unit1_score_v1";
+  const essayKey = "unit1_essay_v1";
+  const state = JSON.parse(localStorage.getItem(storageKey) || '{"correct":0,"total":0}');
+  const updateBar = () => {
+    $('#score').textContent = state.correct;
+    $('#total').textContent = state.total;
+    const w = state.total ? (state.correct/state.total*100) : 0;
+    $('#bar').style.width = w + '%';
+  };
+  const addResult = (ok) => {
+    state.total += 1;
+    if(ok) state.correct += 1;
+    localStorage.setItem(storageKey, JSON.stringify(state));
+    updateBar();
+  };
+
+  // ===== VOCAB =====
+  const wordWrap = $('#words');
+  data.words.forEach(w => {
+    const d = document.createElement('div');
+    d.className = 'pill';
+    d.innerHTML = `<strong>${w.en}</strong><br><span class="small">${w.jp}</span>`;
+    wordWrap.appendChild(d);
+  });
+  $('#miniStory').textContent = data.miniStory;
+  $('#jpHints').textContent = data.miniStoryJP;
+  $('#toggleHints').addEventListener('click', ()=>{
+    const el = $('#jpHints');
+    el.style.display = (el.style.display==='none') ? 'block' : 'none';
+  });
+
+  // TTS for story
+  const speak = (text) => {
+    if(!('speechSynthesis' in window)) { alert('お使いのブラウザは音声合成に対応していません。'); return; }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    speechSynthesis.speak(u);
+  };
+  $('#speakStory').addEventListener('click', ()=> speak(data.miniStory));
+
+  // ===== READING =====
+  $('#passage').textContent = data.passage;
+  const mcArea = $('#mcArea');
+  data.mc.forEach((item, idx)=>{
+    const box = document.createElement('div');
+    box.className = 'q';
+    const name = 'mc'+idx;
+    const opts = item.choices.map((c,i)=>{
+      return `<label style="display:block;margin:.2rem 0">
+        <input type="radio" name="${name}" value="${i}"> ${c}
+      </label>`;
+    }).join('');
+    box.innerHTML = `<p><strong>Q${idx+1}.</strong> ${item.q}</p>${opts}<button class="btn alt">Check</button><div class="small"></div>`;
+    mcArea.appendChild(box);
+    const btn = $('button', box);
+    const msg = $('.small', box);
+    btn.addEventListener('click', ()=>{
+      const v = Number(($('input:checked', box)||{}).value);
+      if(Number.isNaN(v)) { msg.textContent = '選択してからCheck！'; return; }
+      const ok = v===item.a;
+      box.classList.remove('correct','wrong');
+      box.classList.add(ok?'correct':'wrong');
+      msg.textContent = ok ? '✅ Correct!' : '❌ Try again';
+      addResult(ok);
+      $$('input', box).forEach(i=>i.disabled = true);
+      btn.disabled = true;
     });
-  </script>
+  });
+
+  // ===== GRAMMAR =====
+  $$('#grammar .q').forEach(box=>{
+    const btn = $('.check', box);
+    const msg = $('.small', box);
+    const input = $('input', box);
+    btn.addEventListener('click', ()=>{
+      const need = input.dataset.answer.trim().toLowerCase();
+      const got = (input.value||'').trim().toLowerCase();
+      const ok = need === got;
+      box.classList.remove('correct','wrong');
+      box.classList.add(ok?'correct':'wrong');
+      msg.textContent = ok ? '✅ Great!' : `🔎 正解: ${need}`;
+      addResult(ok);
+      input.disabled = true;
+      btn.disabled = true;
+    });
+  });
+
+  // ===== LISTENING =====
+  const tsel = $('#ttsSelect');
+  data.ttsSentences.forEach(s=>{
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    tsel.appendChild(o);
+  });
+  $('#speakSelected').addEventListener('click', ()=> speak(tsel.value));
+  $('#stopTTS').addEventListener('click', ()=> speechSynthesis.cancel());
+
+  // ===== WRITING =====
+  const essay = $('#essay');
+  const wc = $('#wc');
+  const count = () => {
+    const words = (essay.value.trim().match(/\b[\w’'-]+\b/g)||[]).length;
+    wc.textContent = words;
+    if(words<25 || words>35) wc.style.color = 'var(--danger)'; else wc.style.color = 'var(--accent-2)';
+  };
+  essay.addEventListener('input', count);
+  $('#saveEssay').addEventListener('click', ()=>{
+    localStorage.setItem(essayKey, essay.value);
+    alert('保存しました');
+  });
+  $('#loadEssay').addEventListener('click', ()=>{
+    essay.value = localStorage.getItem(essayKey)||'';
+    count();
+  });
+
+  // ===== SUMMARY =====
+  $('#resetAll').addEventListener('click', ()=>{
+    if(!confirm('スコアと作文を消去しますか？')) return;
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(essayKey);
+    state.correct = 0; state.total = 0; updateBar();
+    essay.value=''; count();
+    alert('リセットしました');
+  });
+  $('#exportJSON').addEventListener('click', ()=>{
+    const payload = {
+      timestamp: new Date().toISOString(),
+      score: state,
+      essay: essay.value
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = $('#dl');
+    a.href = url;
+    a.click();
+    setTimeout(()=> URL.revokeObjectURL(url), 1500);
+  });
+
+  // init
+  updateBar();
+  count();
+})();
+</script>
 </body>
 </html>
-
